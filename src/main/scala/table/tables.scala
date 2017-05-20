@@ -30,8 +30,15 @@ object DB {
                          title: Option[String],
                          bookId: String,
                          volumeId: String,
-                         seq: Int
+                         seq: Int,
+                         originalUrl: Option[String],
+                         paragraphId: Option[String]
                         )
+
+  case class ParagraphCase(key: Int,
+                          id: String,
+                          content: Option[String]
+                         )
 
   val connectionUrl = "jdbc:postgresql://localhost:5432/readinglist"
 
@@ -40,6 +47,7 @@ object DB {
   val books = TableQuery[Books]
   val volumes = TableQuery[Volumes]
   val chapters = TableQuery[Chapters]
+  val paragraphs = TableQuery[Paragraphs]
 
   def insertBook(seq: BookCase) = {
     val inserts = DBIO.seq(
@@ -58,6 +66,13 @@ object DB {
   def insertChapter(seq: ChapterCase) = {
     val inserts = DBIO.seq(
       chapters += ChapterCase.unapply(seq).get
+    )
+    db.run(inserts)
+  }
+
+  def insertParagraph(seq: ParagraphCase) = {
+    val inserts = DBIO.seq(
+      paragraphs += ParagraphCase.unapply(seq).get
     )
     db.run(inserts)
   }
@@ -101,7 +116,7 @@ object DB {
     def * = (key, id, title, bookId, seq)
   }
 
-  class Chapters(tag: Tag) extends Table[(Int, String, Option[String], String, String, Int)](tag, "chapter") {
+  class Chapters(tag: Tag) extends Table[(Int, String, Option[String], String, String, Int, Option[String], Option[String])](tag, "chapter") {
     def key = column[Int]("key", O.PrimaryKey, O.AutoInc)
 
     def id = column[String]("id")
@@ -114,7 +129,20 @@ object DB {
 
     def seq = column[Int]("seq")
 
-    def * = (key, id, title, bookId, volumeId, seq)
+    def originalUrl = column[Option[String]]("original_url")
+
+    def paragraphId = column[Option[String]]("paragraph_id")
+
+    def * = (key, id, title, bookId, volumeId, seq, originalUrl, paragraphId)
   }
 
+  class Paragraphs(tag: Tag) extends Table[(Int, String, Option[String])](tag, "paragraph") {
+    def key = column[Int]("key", O.PrimaryKey, O.AutoInc)
+
+    def id = column[String]("id")
+
+    def content = column[Option[String]]("content")
+
+    def * = (key, id, content)
+  }
 }

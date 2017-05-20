@@ -18,6 +18,10 @@ trait Skeleton {
   def volumeTitleFactory(): Function1[String, String] = identity
 
   def chapterTitleFactory(): Function1[String, String] = identity
+
+  def paragraphLinkSelector(): String = "a"
+
+  def contentSelector(): String
 }
 
 class QidianSkeleton extends Skeleton {
@@ -32,7 +36,7 @@ class QidianSkeleton extends Skeleton {
 
   override def volumesSelector(): String = "#j-catalogWrap .volume"
 
-  override def chapterTitleRelativeSelector(): String = ""
+  override def chapterTitleRelativeSelector(): String = "a"
 
   override def volumeTitleFactory() = (title: String) => {
     val parts = title.split(" |·")
@@ -41,4 +45,6 @@ class QidianSkeleton extends Skeleton {
     else
       ""
   }
+
+  override def contentSelector(): String = ".read-content"
 }

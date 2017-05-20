@@ -13,11 +13,11 @@ import table.DB
 import table.DB.{BookCase, ChapterCase, VolumeCase}
 import util.Util
 
-case class FetchMessage();
+case class FetchMessage()
 
-case class CatalogMessage(url: String);
+case class CatalogMessage(url: String)
 
-case class ContentMessage();
+case class ContentMessage()
 
 class CatalogActor(name: String) extends Actor {
 
@@ -67,8 +67,9 @@ class CatalogActor(name: String) extends Actor {
 
       val chapterCases = chapters.map(chapter => {
         val chapterTitle: String = elementText(chapter, skeleton.chapterTitleRelativeSelector())
+        val chapterUrl: String = elementLink(chapter, skeleton.paragraphLinkSelector())
         chapterSeq += 1
-        ChapterCase(0, Util.randomHash(), Some(skeleton.chapterTitleFactory()(chapterTitle)), bookId, volumeId, chapterSeq)
+        ChapterCase(0, Util.randomHash(), Some(skeleton.chapterTitleFactory()(chapterTitle)), bookId, volumeId, chapterSeq, Some(chapterUrl), Some(""))
       })
       new Volume(currentVolume, chapterCases)
     })
@@ -79,7 +80,15 @@ class CatalogActor(name: String) extends Actor {
     if (selector.isEmpty()) {
       return element.text
     } else {
-      element >> text(selector)
+      return element >> text(selector)
+    }
+  }
+
+  def elementLink(element: Element, selector: String): String = {
+    if (selector.isEmpty()) {
+      return element.attr("href")
+    } else {
+      return element >> attr("href")(selector)
     }
   }
 
@@ -91,5 +100,6 @@ class CatalogActor(name: String) extends Actor {
         DB.insertChapter(chapter)
       })
     })
+    println("storing catalog completes!")
   }
 }
