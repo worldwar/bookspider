@@ -77,6 +77,12 @@ object DB {
     db.run(inserts)
   }
 
+  def updateChapterWithParagraph(chapter: String, paragraph: String): Unit = {
+    val q = for {c <- chapters if c.id === chapter} yield c.paragraphId
+    val updateAction = q.update(Some(paragraph))
+    db.run(updateAction)
+  }
+
   implicit val jodaDateTimeType =
     MappedColumnType.base[DateTime, Timestamp](
       dt => new Timestamp(dt.getMillis),

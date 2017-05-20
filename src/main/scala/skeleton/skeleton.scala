@@ -19,9 +19,11 @@ trait Skeleton {
 
   def chapterTitleFactory(): Function1[String, String] = identity
 
+  def chapterUrlFactory(): Function1[String, String] = identity
+
   def paragraphLinkSelector(): String = "a"
 
-  def contentSelector(): String
+  def paragraphsSelector(): String
 }
 
 class QidianSkeleton extends Skeleton {
@@ -46,5 +48,19 @@ class QidianSkeleton extends Skeleton {
       ""
   }
 
-  override def contentSelector(): String = ".read-content"
+  override def paragraphsSelector(): String = ".read-content p"
+
+  override def chapterUrlFactory() = (url: String) => {
+    if (!url.isEmpty) {
+      if (url.startsWith("//")) {
+        "http:" + url
+      } else if (!url.startsWith("http")) {
+        "http://" + url
+      } else {
+        url
+      }
+    } else {
+      url
+    }
+  }
 }

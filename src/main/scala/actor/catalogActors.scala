@@ -1,14 +1,14 @@
 package actor
 
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef, Props}
 import domain.{Book, Volume}
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.model.Element
 import net.ruippeixotog.scalascraper.scraper.ContentExtractors._
 import org.joda.time.DateTime
-import skeleton.{QidianSkeleton, Skeleton}
+import skeleton.Skeleton
 import table.DB
 import table.DB.{BookCase, ChapterCase, VolumeCase}
 import util.Util
@@ -17,24 +17,36 @@ case class FetchMessage()
 
 case class CatalogMessage(url: String)
 
-case class ContentMessage()
+case class ParagraphMessage(chapter_id: String, url: String)
+
+case class ParagraphCompleteMessage(chapter_id: String, paragraph_id: String)
 
 class CatalogActor(name: String) extends Actor {
+  val size = 10
+  val paragraphActors: Array[ActorRef] = Array.fill(size)(Context.actorSystem.actorOf(Props(new ParagraphActor)))
+
+  def setParagraph(chapter: String, paragraph: String): Unit = {
+    DB.updateChapterWithParagraph(chapter, paragraph)
+  }
 
   override def receive: Receive = {
     case CatalogMessage(url) => {
       println(s"receive catalog message %url")
       doCatalog(url)
+    };
+    case ParagraphCompleteMessage(chapter, paragraph) => {
+      setParagraph(chapter, paragraph)
     }
   }
 
-  def parse(url: String): Skeleton = {
-    new QidianSkeleton
-  }
-
-
   def dispatchCatalog(book: Book): Unit = {
-
+    var i = 0
+    book.volumes foreach { volume =>
+      volume.chapters foreach { chapter =>
+        paragraphActors(i % size) ! ParagraphMessage(chapter.id, chapter.originalUrl.get)
+        i += 1
+      }
+    }
   }
 
   def doCatalog(url: String): Unit = {
@@ -45,7 +57,7 @@ class CatalogActor(name: String) extends Actor {
   }
 
   def fetchCatalog(url: String): Book = {
-    val skeleton: Skeleton = parse(url)
+    val skeleton: Skeleton = Util.parse(url)
     val browser = JsoupBrowser()
     val page = browser.get(url)
 
@@ -68,8 +80,10 @@ class CatalogActor(name: String) extends Actor {
       val chapterCases = chapters.map(chapter => {
         val chapterTitle: String = elementText(chapter, skeleton.chapterTitleRelativeSelector())
         val chapterUrl: String = elementLink(chapter, skeleton.paragraphLinkSelector())
+
         chapterSeq += 1
-        ChapterCase(0, Util.randomHash(), Some(skeleton.chapterTitleFactory()(chapterTitle)), bookId, volumeId, chapterSeq, Some(chapterUrl), Some(""))
+        ChapterCase(0, Util.randomHash(), Some(skeleton.chapterTitleFactory()(chapterTitle)), bookId,
+          volumeId, chapterSeq, Some(skeleton.chapterUrlFactory()(chapterUrl)), Some(""))
       })
       new Volume(currentVolume, chapterCases)
     })

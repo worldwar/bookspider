@@ -2,6 +2,8 @@ package util
 
 import java.security.MessageDigest
 
+import skeleton.{QidianSkeleton, Skeleton}
+
 import scala.util.Random
 
 object Util {
@@ -17,5 +19,9 @@ object Util {
   }
 
   def randomHash(): String = Util.md5Hash(Random.alphanumeric.take(10).mkString)
+
+  def parse(url: String): Skeleton = {
+    new QidianSkeleton
+  }
 }
 
