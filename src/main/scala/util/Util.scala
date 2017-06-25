@@ -2,10 +2,11 @@ package util
 
 import java.security.MessageDigest
 
-import skeleton.{QidianSkeleton, Skeleton}
-
+import net.ruippeixotog.scalascraper.dsl.DSL._
+import net.ruippeixotog.scalascraper.scraper.ContentExtractors._
+import source.source.Source
 import scala.util.Random
-
+import net.ruippeixotog.scalascraper.model.{Element}
 object Util {
 
   def md5Hash(text: String): String = {
@@ -20,8 +21,30 @@ object Util {
 
   def randomHash(): String = Util.md5Hash(Random.alphanumeric.take(10).mkString)
 
-  def parse(url: String): Skeleton = {
-    new QidianSkeleton
+  def parse(url: String): (Source) = {
+    if (url.contains("qidian")) {
+      source.source.qidian
+    } else if (url.contains("qu.la")){
+      source.source.biquge
+    } else {
+      source.source.biquge
+    }
+  }
+
+  def elementText(element: Element, selector: String): String = {
+    if (selector.isEmpty()) {
+      return element.text
+    } else {
+      return element >> text(selector)
+    }
+  }
+
+  def elementLink(element: Element, selector: String): String = {
+    if (selector.isEmpty()) {
+      return element.attr("href")
+    } else {
+      return element >> attr("href")(selector)
+    }
   }
 }
 

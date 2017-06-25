@@ -1,4 +1,4 @@
-name := "Hello Test #1"
+name := "bookspider"
 
 version := "1.0"
 
@@ -7,6 +7,10 @@ scalaVersion := "2.12.1"
 //#resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 //fork := true
 //javaOptions in run += "-Dconfig.file=local.conf"
+
+mainClass in Compile := Some("main")
+
+assemblyJarName := "bookspider.jar"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.1"
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.5.1"

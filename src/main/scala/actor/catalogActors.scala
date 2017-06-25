@@ -2,15 +2,12 @@ package actor
 
 
 import akka.actor.{Actor, ActorRef, Props}
-import domain.{Book, Volume}
+import domain.{Book}
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.model.Element
 import net.ruippeixotog.scalascraper.scraper.ContentExtractors._
-import org.joda.time.DateTime
-import skeleton.Skeleton
 import table.DB
-import table.DB.{BookCase, ChapterCase, VolumeCase}
 import util.Util
 
 case class FetchMessage()
@@ -57,37 +54,10 @@ class CatalogActor(name: String) extends Actor {
   }
 
   def fetchCatalog(url: String): Book = {
-    val skeleton: Skeleton = Util.parse(url)
+    val source = Util.parse(url)
     val browser = JsoupBrowser()
     val page = browser.get(url)
-
-    val title: String = page >> text(skeleton.titleSelector)
-    val author: String = page >> text(skeleton.auhtorSelector)
-    val bookCase = BookCase(0, Util.randomHash(), title, author, Some(null), Some(url), Some(DateTime.now()), Some(DateTime.now()))
-    val volumeItems: List[Element] = page >> elementList(skeleton.volumesSelector)
-
-    var chapterSeq = -1
-    var volumeSeq = -1
-    val volumes = volumeItems.map(volume => {
-      val bookId: String = bookCase.id
-      val volumeId: String = Util.randomHash()
-      val volumeTitle: String = volume >> text(skeleton.volumeTitleRelativeSelector)
-      volumeSeq += 1
-      val currentVolume = VolumeCase(0, volumeId, Some(skeleton.volumeTitleFactory()(volumeTitle)), bookId, volumeSeq)
-
-      val chapters: List[Element] = volume >> elementList(skeleton.chaptersRelativeSelector)
-
-      val chapterCases = chapters.map(chapter => {
-        val chapterTitle: String = elementText(chapter, skeleton.chapterTitleRelativeSelector())
-        val chapterUrl: String = elementLink(chapter, skeleton.paragraphLinkSelector())
-
-        chapterSeq += 1
-        ChapterCase(0, Util.randomHash(), Some(skeleton.chapterTitleFactory()(chapterTitle)), bookId,
-          volumeId, chapterSeq, Some(skeleton.chapterUrlFactory()(chapterUrl)), Some(""))
-      })
-      new Volume(currentVolume, chapterCases)
-    })
-    new Book(bookCase, volumes)
+    source.catalogPolicy.parse(url, page)
   }
 
   def elementText(element: Element, selector: String): String = {
