@@ -91,7 +91,7 @@ object DB {
   class Books(tag: Tag) extends Table[(Int, String, String, String, Option[String], Option[String], Option[DateTime], Option[DateTime])](tag, "book") {
     def key = column[Int]("key", O.PrimaryKey, O.AutoInc)
 
-    def id = column[String]("id")
+    def id = column[String]("book_id")
 
     def title = column[String]("title")
 
@@ -111,7 +111,7 @@ object DB {
   class Volumes(tag: Tag) extends Table[(Int, String, Option[String], String, Int)](tag, "volume") {
     def key = column[Int]("key", O.PrimaryKey, O.AutoInc)
 
-    def id = column[String]("id")
+    def id = column[String]("volume_id")
 
     def title = column[Option[String]]("title")
 
@@ -125,7 +125,7 @@ object DB {
   class Chapters(tag: Tag) extends Table[(Int, String, Option[String], String, String, Int, Option[String], Option[String])](tag, "chapter") {
     def key = column[Int]("key", O.PrimaryKey, O.AutoInc)
 
-    def id = column[String]("id")
+    def id = column[String]("chapter_id")
 
     def title = column[Option[String]]("title")
 
@@ -145,7 +145,7 @@ object DB {
   class Paragraphs(tag: Tag) extends Table[(Int, String, Option[String])](tag, "paragraph") {
     def key = column[Int]("key", O.PrimaryKey, O.AutoInc)
 
-    def id = column[String]("id")
+    def id = column[String]("paragraph_id")
 
     def content = column[Option[String]]("content")
 
